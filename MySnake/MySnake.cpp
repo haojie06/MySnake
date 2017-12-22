@@ -1,6 +1,7 @@
 // MySnake.cpp : 定义控制台应用程序的入口点。
 //
 
+
 #include "stdafx.h"
 #include <stdio.h>
 #include <time.h>
@@ -22,9 +23,6 @@
 #define RIGHT 1
 int map[MAPX][MAPY] = {0};
 
-int r1, r2, r3, r4, r5, r6, round1, round2, round3, round4, round5, round6;
-int xa, xb, xc, xd, xe, xf, ya, yb, yc, yd, ye, yf;//用于后面生成多个食物
-int xA, xB, xC, xD, xE, xF, yA, yB, yC, yD, yE, yF;//用于后面清除过期食物
 int gameStatus;											   //在游戏开始时确认同时存在的最多食物数量
 int score = 0;
 
@@ -49,7 +47,7 @@ struct food
 int foodCount = 0;//统计已有的食物数
 int foodNum;
 food * foodGroup;
-
+char* key;//按键
 snake* head, *tail;
 
 void iniMap();
@@ -66,7 +64,7 @@ int rand_food_x(void);
 int rand_food_y(void);
 int judge();
 void foodClear();
-
+void printKey();
 int main()
 {		
 	foodNum = (rand_food_x() * 100) % 10 + 5;
@@ -117,10 +115,9 @@ void printMap()
 			count += 1;
 			map[cur->positionX][cur->positionY] = 2;
 			cur = cur->next;
-			//printf("%d,%d\n", cur->positionX, cur->positionY);
 		}
-		//printf("有%d", count);
-		
+		map[head->positionX][head->positionY] = 6;//单独给蛇头一个值
+
 		for (int i = 0; i < MAPX; i++)
 		{
 			for (int j = 0; j < MAPY; j++)
@@ -145,15 +142,21 @@ void printMap()
 				case 5:
 					gotoxy(i, 2 * j);
 					printf("$$");
+					break;
+				case 6:
+					gotoxy(i, 2 * j);
+					printf("■");
+					break;
 				}
 			}
 		}
 	}
 }
+
 void iniSnake()
 {
 	/*对蛇进行初始化
-	*初始长度为三节 坐标在中心
+	*初始长度为X节  蛇头坐标在中心
 	*/
 	//建立双向链表
 
@@ -179,10 +182,10 @@ void iniSnake()
 		}
 		
 	}
-	tail = current;//尾指针 ???
-	//malloc没有初始化！
+	tail = current;//尾指针 始终指向最后出现的一个
 	tail->next = NULL;
 }
+
 
 //增加头节点
 void addSnake(int x, int y)
@@ -204,89 +207,179 @@ void delTail()
 	tail->next = NULL;
 	
 }
+
 //蛇的移动
 void move(int dirX,int dirY)
 {
-	int isDel = 0;
+	int result = 0;
 	addSnake(dirX, dirY);
-	isDel = judge();
-	if (isDel != 1)
+	result = judge();
+	if (result != 1)//不吃到食物时，每次移动都删掉尾节点
 	{
 		delTail();
 	}
-	foodClear();
+
+	foodClear();//清除过期的食物
 }
 
 
 //游戏主循环
 void playGame()
-{
-	int foodNum = rand_food_y() % 10 + 1;
+{	
+
+	int kbhitCount = 0;//统计按键次数
+	int foodNum = rand_food_y() % 10 + 1;//最大食物数量
 	foodGroup = (food*)calloc(sizeof(food), foodNum);
-	 gameStatus = 1;
-	int directionX = 0, directionY = 1;
+	gameStatus = 1;
+	//这两个数组用来保存一系列指令的方向
+	int directionX[20] = { 0 }, directionY[20] = { 0};
+	 //初始方向向上
+	 directionX[0] = -1;
+	 directionY[0] = 0;
+
+ key = (char*)calloc(sizeof(char),20);//按键数组最多接受20个
+	for (int i = 0; i < 10; i++)
+		key[i] = 0;
+
+	
+	int step = 0;//走的步数
+	char lastKey;
 	while (gameStatus)
 	{
-		generateFood();
+		printKey();
+		generateFood();//生成食物及去除过期食物  !!吃到智慧草 食物寿命无限
+		int hit = 0;
 		if (!kbhit())
-		{
-			move(directionX, directionY);
+		{	
 
+			//当 key 的数组中还存在 按键时 读取按键
+			move(directionX[step], directionY[step]);
+			//走过后清除这一步的数据(有多条指令的时候)，并准备读取下一指令
+			if (step != 0) {
+				lastKey = key[step];//?
+				key[step] = 0;
+				//directionX[step] = 0;
+				//directionY[step] = 0;
+				//step += 1;
+			}
+	
+			//printf("   %d step", step);
+			if (key[step+1] == 0)//读取下一步发现没有按键时
+			{   
+				//保留当前方向
+				directionX[0] = directionX[step];
+				directionY[0] = directionY[step];
+				step = 0;//又返回第一步，第一步即等会输入的值
+				kbhitCount = 0;//指令数变为1条
+			}
+			else { step += 1;
+			//kbhitCount++;
+			}//下一轮还是读取储存好的指令
+			
 			printMap();
-			//检测键盘输入
-			Sleep(500);
+			Sleep(400);
+
+
 		}
-		else
+		else//当检测到键盘输入时   如果本次输入与上次输入相同，不接受
 		{
-			//有键盘输入时
-			char key = getch();
-			if (directionX == 1)//down
-			{
-				switch (key)
-				{
-				case KEYLEFT:
-					directionY = -1, directionX = 0;
-					break;
-				case KEYRIGHT:
-					directionY = 1, directionX = 0;
-					break;
-				}
-			}
-			if (directionX == -1) //up
-			{
-				switch (key)
-				{
-				case KEYLEFT:
-					directionY = -1, directionX = 0;
-					break;
-				case KEYRIGHT:
-					directionY = 1, directionX = 0;
-				}
-			}
-			if (directionY == 1)
-			{
-				switch (key)
-				{
 
-				case KEYUP:
-					directionX = -1, directionY = 0;
-					break;
-				case KEYDOWN:
-					directionX = 1, directionY = 0;
+			    getch();//取得 方向键值 第一部分
+				key[kbhitCount] = getch();
+				//下面用于保存输入的值
+				int compare;//比较的对象 的下标
+				if (kbhitCount == 0) {//此时比较对象为自己原有的值，否则是和上一项比较
+					compare = 0;
 				}
-			}
-
-			if (directionY == -1)
-			{
-				switch (key)
+				else
 				{
-				case KEYUP:
-					directionX = -1, directionY = 0;
-					break;
-				case KEYDOWN:
-					directionX = 1, directionY = 0;
+					compare = kbhitCount - 1;
 				}
-			}
+
+					if (directionX[compare] == 1)//down   原来的方向向下时！就不能向上
+					{
+
+						switch (key[kbhitCount])//获取当前输入
+						{
+						case KEYLEFT:
+							directionY[kbhitCount] = -1, directionX[kbhitCount] = 0;
+							break;
+						case KEYRIGHT:
+							directionY[kbhitCount] = 1, directionX[kbhitCount] = 0;
+							break;
+						case KEYDOWN:
+							directionX[kbhitCount] = 1, directionY[kbhitCount] = 0;
+							break;
+						case KEYUP:
+							directionX[kbhitCount] = 1, directionY[kbhitCount] = 0;
+							break;
+							//如果不写这个蛇会消失-没有移动但删除了尾巴
+						}
+					}
+
+					if (directionX[compare] == -1) //up
+					{
+						switch (key[kbhitCount])
+						{
+						case KEYLEFT:
+							directionY[kbhitCount] = -1, directionX[kbhitCount] = 0;
+							break;
+						case KEYRIGHT:
+							directionY[kbhitCount] = 1, directionX[kbhitCount] = 0;
+							break;
+						case KEYDOWN:
+							directionX[kbhitCount] = -1, directionY[kbhitCount] = 0;
+							break;
+						case KEYUP:
+							directionX[kbhitCount] = -1, directionY[kbhitCount] = 0;
+							break;
+						}
+					}
+					if (directionY[compare] == 1)//向右移动
+					{
+						switch (key[kbhitCount])
+						{
+
+						case KEYUP:
+							directionX[kbhitCount] = -1, directionY[kbhitCount] = 0;
+							break;
+						case KEYDOWN:
+							directionX[kbhitCount] = 1, directionY[kbhitCount] = 0;
+							break;
+						case KEYRIGHT:
+							directionX[kbhitCount] = 0, directionY[kbhitCount] = 1;
+							break;
+						case KEYLEFT:
+							directionX[kbhitCount] = 0, directionY[kbhitCount] = 1;
+							break;
+						}
+					}
+
+					if (directionY[compare] == -1)
+					{
+						switch (key[kbhitCount])
+						{
+						case KEYUP:
+							directionX[kbhitCount] = -1, directionY[kbhitCount] = 0;
+							break;
+						case KEYDOWN:
+							directionX[kbhitCount] = 1, directionY[kbhitCount] = 0;
+							break;
+						case KEYLEFT:
+							directionX[kbhitCount] = 0, directionY[kbhitCount] = -1;
+							break;
+						case KEYRIGHT:
+							directionX[kbhitCount] = 0, directionY[kbhitCount] = -1;
+							break;
+						}
+				   gotoxy(26, 0);
+
+
+				}
+									
+			kbhitCount++;
+			//gotoxy(21, 0);
+			printf("%按键%d\n", kbhitCount);
 		}
 	}
 	system("cls");
@@ -326,7 +419,7 @@ void generateFood()
 			{//该位置的食物不存在时
 				foodGroup[foodCount].foodX = x;
 				foodGroup[foodCount].foodY = y;
-				foodGroup[foodCount].foodLife = rand_food_x() % 5 + 5;//食物的寿命
+				foodGroup[foodCount].foodLife = (rand_food_x()*100) % 12 + 5;//食物的寿命
 				foodGroup[foodCount].status = 1;
 				map[x][y] = 5;
 				
@@ -359,12 +452,12 @@ int rand_food_y(void)
 
 
 int judge()
-{
+{	
 	int result = 0;
 	int x = head->positionX;
 	int y = head->positionY;
 	//对蛇头进行判断,吃到食物后不删除尾巴
-	if (map[head->positionX][head->positionY] == 5)
+	if (map[head->positionX][head->positionY] == 5)//头的坐标和食物的坐标重合
 	{
 
 		for (int i = 0; i < foodCount; i++)
@@ -379,24 +472,30 @@ int judge()
 
 			}
 	}
+	//撞墙了！
 	else if (map[x][y] == 1)
 		gameStatus = 0;
-	else if (map[x][y] == 2)
+
+	//咬到自己
+	else if (map[x][y] == 2)//蛇头坐标和身体坐标重合
 	{
-		//在这里对咬到自己进行处理
+		//先找到咬到的地方
 		snake * find;
-		find = head;
-		int i = 1;
-		while (find != NULL)
+		find = head->next;
+		int loseNum = 0;//被咬掉的节数
+		while (find != NULL)//遍历链表
 		{
 			if (find->positionX == x && find->positionY == y)
-			{	//删除之后的节点
+			{
+				gotoxy(21, 8);
+				printf("你失去了%d节", loseNum);
+				//删除之后的节点
 				snake * del;
 				int count = 0;
-				//while (tail != find->previous)
-				//for(int i =0;i < 3;i++)
+				//从尾节点开始删除
 				do
-				{
+				{	
+					count++;
 					map[tail->positionX][tail->positionY] = 0;
 					tail = tail->previous;
 					free(tail->next);
@@ -404,9 +503,8 @@ int judge()
 				} while (tail->positionX == find->positionX && tail->positionY == find->positionY);
 				//再清除掉一段
 				gotoxy(22, 0);
-				printf("痛！！！！！");
+				printf("痛！！！！！你失去了%d",count);
 				break;
-
 			}
 			find = find->next;
 		}
@@ -432,4 +530,38 @@ void foodClear()
 			}
 		}
 	}
+}
+
+void printKey()
+{
+	for (int i = 0; i < 10; i++) {//打印指令
+		char k = key[i];
+		switch (k)
+		{
+		case KEYUP:
+			printf(" ↑ ");
+			break;
+
+		case KEYDOWN:
+			printf(" ↓ ");
+			break;
+
+		case KEYLEFT:
+			printf(" ← ");
+			break;
+
+		case KEYRIGHT:
+			printf(" → ");
+			break;
+
+		default:
+			break;
+
+		}
+	}
+}
+
+void BFS()
+{
+	
 }
