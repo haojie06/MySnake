@@ -10,7 +10,7 @@
 #include <malloc.h>
 #include <stdlib.h>
 #include <conio.h>
-
+#include <graphics.h>
 #define KEYUP 72
 #define KEYDOWN 80
 #define KEYLEFT 75
@@ -21,30 +21,144 @@
 #define DOWN 1
 #define LEFT -1
 #define RIGHT 1
-int map[MAPX + 2][MAPY + 2] = //{ 0 };
+
+
+int pic[40][40] = { 0 };
+int map[MAPX][MAPY] = { 0 };
+//将来写到头文件中去
+//草原，食物为南瓜 毒为腐肉
+int mapSel[6][MAPX][MAPY] = {
 {
 { 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 },
-{ 1,8,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1 },//起点
-{ 1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,1 },
-{ 1,0,0,0,0,0,1,9,0,0,0,0,0,0,0,0,1,0,0,1 },//终点在本行
-{ 1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,1 },
-{ 1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1 },
-{ 1,0,0,0,0,0,1,0,1,0,0,0,0,0,5,0,0,0,0,1 },
+{ 1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1 },//起点
 { 1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1 },
-{ 1,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,1 },
+{ 1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1 },//终点在本行
+{ 1,0,0,0,1,1,0,1,0,0,0,0,1,0,1,1,0,0,0,1 },
+{ 1,0,0,0,1,1,0,1,0,0,0,0,1,0,1,1,0,0,0,1 },
 { 1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1 },
+{ 1,0,0,0,1,1,0,1,0,0,0,0,1,0,1,1,0,0,0,1 },
 { 1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1 },
 { 1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1 },
 { 1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1 },
-{ 1,0,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1 },
 { 1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1 },
-{ 1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1 },
-{ 1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1 },
-{ 1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1 },
-{ 1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1 },
-{ 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 } };
+{ 1,0,0,0,1,1,0,1,1,0,0,1,1,0,1,1,0,0,0,1 },
+{ 1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1 },
+{ 1,0,0,0,1,1,0,1,1,0,0,1,1,0,1,1,0,0,0,1 },
+{ 1,0,0,0,1,1,0,1,1,0,0,1,1,0,1,1,0,0,0,1 },
+{ 1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1 },
+{ 1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1 },
+{ 1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1 },
+{ 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 } }
+,
+{//森林
+	{ 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 },
+	{ 1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1 },
+	{ 1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1 },
+	{ 1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1 },
+	{ 1,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1 },
+	{ 1,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1 },
+	{ 1,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,0,1 },
+	{ 1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1 },
+	{ 1,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,1 },
+	{ 1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1 },
+	{ 1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1 },
+	{ 1,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,1,1 },
+	{ 1,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1 },
+	{ 1,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1 },
+	{ 1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1 },
+	{ 1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1 },
+	{ 1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1 },
+	{ 1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1 },
+	{ 1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1 },
+	{ 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 } },
+	{
+		{ 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 },
+		{ 1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1 },
+		{ 1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1 },
+		{ 1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1 },
+		{ 1,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,1 },
+		{ 1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1 },
+		{ 1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1 },
+		{ 1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1 },
+		{ 1,0,0,0,1,0,0,0,1,0,0,1,0,0,0,1,0,0,0,1 },
+		{ 1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1 },
+		{ 1,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,0,1 },
+		{ 1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1 },
+		{ 1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1 },
+		{ 1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1 },
+		{ 1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1 },
+		{ 1,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,1 },
+		{ 1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1 },
+		{ 1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1 },
+		{ 1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1 },
+		{ 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 } },
+		{    //冰原
+			{ 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 },
+			{ 1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1 },
+			{ 1,1,0,0,0,0,0,0,0,1,0,0,0,1,1,1,0,0,0,1 },
+			{ 1,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,1,1 },
+			{ 1,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1 },
+			{ 1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1 },
+			{ 1,1,0,0,0,0,0,0,0,1,0,0,0,1,1,1,0,0,0,1 },
+			{ 1,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,1,1 },
+			{ 1,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1 },
+			{ 1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1 },
+			{ 1,1,0,0,0,0,0,0,0,1,0,0,0,1,1,1,0,0,0,1 },
+			{ 1,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,1,1 },
+			{ 1,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1 },
+			{ 1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1 },
+			{ 1,1,0,0,0,0,0,0,0,1,0,0,0,1,1,1,0,0,0,1 },
+			{ 1,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,1,1 },
+			{ 1,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1 },
+			{ 1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1 },
+			{ 1,1,0,0,0,0,0,0,0,1,0,0,0,1,1,1,0,0,0,1 },
+			{ 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 } } ,
+
+			{
+				{ 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 },
+				{ 1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,1 },
+				{ 1,1,0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,0,0,1 },
+				{ 1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,1 },
+				{ 1,1,0,0,0,1,0,1,0,0,0,0,1,0,1,0,0,0,0,1 },
+				{ 1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,1 },
+				{ 1,1,0,0,0,1,0,0,1,0,0,0,0,0,1,0,0,0,0,1 },
+				{ 1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,1 },
+				{ 1,1,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,1 },
+				{ 1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,1 },
+				{ 1,1,0,0,0,1,0,1,0,0,0,0,0,0,1,0,0,0,0,1 },
+				{ 1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1 },
+				{ 1,1,0,0,0,1,0,0,0,0,1,0,0,0,1,0,0,0,1,1 },
+				{ 1,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,1 },
+				{ 1,1,0,0,0,1,0,0,1,0,0,0,1,0,1,0,0,0,1,1 },
+				{ 1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1 },
+				{ 1,1,0,0,0,1,0,0,1,0,0,0,1,0,1,0,0,0,1,1 },
+				{ 1,0,0,1,0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,1 },
+				{ 1,1,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,1,1 },
+				{ 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 } } ,
+
+				{
+					{ 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 },
+					{ 1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1 },
+					{ 1,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,1 },
+					{ 1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1 },
+					{ 1,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1 },
+					{ 1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1 },
+					{ 1,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1 },
+					{ 1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1 },
+					{ 1,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1 },
+					{ 1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1 },
+					{ 1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1 },
+					{ 1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1 },
+					{ 1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1 },
+					{ 1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1 },
+					{ 1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1 },
+					{ 1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1 },
+					{ 1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1 },
+					{ 1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1 },
+					{ 1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1 },
+					{ 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 } }};
 int AX, AY;
-int maze[MAPX][MAPY]; //用于搜索
+int maze[MAPX][MAPY] = {0}; //用于搜索
 int autoRound = 0;
 int step;
 int kbhitCount;
@@ -114,6 +228,11 @@ struct poison
 	int status;
 	//int kind 
 };
+int difficulty = 0;//难度
+int scene = 0;//地图
+
+
+char playerName[20];
 int foodCount = 0;//统计已有的食物数
 int poisonCount = 0;
 int foodNum;
@@ -123,7 +242,8 @@ poison * poisonGroup;
 char* key,* autoKey;//按键
 int isFinish = 1;
 snake* head, *tail;
-int walkMode = 1;//行走模式 0-手动,1-自动
+int walkMode = 3;//行走模式 0-手动,1-自动 3_半自动
+int modeCount = 0;
 void iniMap();
 void iniSnake();
 void printMap();
@@ -144,12 +264,19 @@ void loadKey();//加载计算出来的路径
 void clearKey();//清除已有的路径
 void BFS();
 void theWall(int dirX,int dirY);//防止撞墙--在每次移动后进行
+void beforeGame();//游戏开始界面
+void setting();
 int main()
 {		
-	foodNum = (rand_food_x() *133) % 10 + 10;
+	
+//	foodNum = (rand_food_x() *133) % 10 + 14;
 	poisonNum = (rand_food_x() * 12) % 10 + 12;
 	/*注意 全角字符使用goto语句时要*/
+		initgraph(1000, 620);//画布大小
 		HideCursor();
+		beforeGame();
+		
+		setting();//游戏设置 玩家姓名，地图选择，难度选择
 		iniMap();
 		iniSnake();
 		printMap();//关于gotoxy的显示问题 为什么不能goto到 地图右边？？
@@ -164,33 +291,84 @@ int main()
 //地图初始化
 void iniMap()
 {	//边框
+	initgraph(1000, 620);
+	IMAGE img;
+	loadimage(&img, L"E:\\store\\source code\\MySnake\\image\\level1.jpg");
+	putimage(0, 0, &img);
 	for (int i = 0; i < MAPX; i++)
 	{
 		map[i][0] = 1;
-		map[i][19] = 1;
+		map[i][MAPX - 1] = 1;
 	}
 
 	for (int j = 0; j < MAPY; j++)
 	{
 		map[0][j] = 1;
-		map[19][j] = 1;
+		map[MAPY - 1][j] = 1;
 	}
 }
 
 void printMap()
 {	
-
+	//改为图形界面了
+	IMAGE img[10];
+	if (scene == 0)//平静草原
+	{
+		loadimage(&img[0], L"E:\\store\\source code\\MySnake\\image\\dirt.jpg");//泥土代表空
+		loadimage(&img[1], L"E:\\store\\source code\\MySnake\\image\\food_apple.jpg");//苹果
+		loadimage(&img[2], L"E:\\store\\source code\\MySnake\\image\\stone.jpg");//原石代表墙
+		loadimage(&img[3], L"E:\\store\\source code\\MySnake\\image\\poison_rotton.jpg");//毒草
+		loadimage(&img[4], L"E:\\store\\source code\\MySnake\\image\\furnace.jpg");
+		loadimage(&img[5], L"E:\\store\\source code\\MySnake\\image\\stonebrick.jpg");
+		
+	}
+	else if (scene == 1)//森林
+	{
+		loadimage(&img[0], L"E:\\store\\source code\\MySnake\\image\\dirt_forest.jpg");
+		loadimage(&img[1], L"E:\\store\\source code\\MySnake\\image\\food_forest.jpg");
+		loadimage(&img[2], L"E:\\store\\source code\\MySnake\\image\\wall_forest.jpg");
+		loadimage(&img[3], L"E:\\store\\source code\\MySnake\\image\\poison_forest.jpg");
+		loadimage(&img[4], L"E:\\store\\source code\\MySnake\\image\\furnace.jpg");
+		loadimage(&img[5], L"E:\\store\\source code\\MySnake\\image\\stonebrick.jpg");
+	}
+	else if (scene == 3)
+	{
+		loadimage(&img[0], L"E:\\store\\source code\\MySnake\\image\\sand_floor.jpg");
+		loadimage(&img[1], L"E:\\store\\source code\\MySnake\\image\\sand_food.jpg");
+		loadimage(&img[2], L"E:\\store\\source code\\MySnake\\image\\sand_wall.jpg");
+		loadimage(&img[3], L"E:\\store\\source code\\MySnake\\image\\sand_poison.jpg");
+		loadimage(&img[4], L"E:\\store\\source code\\MySnake\\image\\furnace.jpg");
+		loadimage(&img[5], L"E:\\store\\source code\\MySnake\\image\\stonebrick.jpg");
+	}
+	else if (scene == 2)
+	{
+		loadimage(&img[0], L"E:\\store\\source code\\MySnake\\image\\ice_floor.jpg");
+		loadimage(&img[1], L"E:\\store\\source code\\MySnake\\image\\ice_food.jpg");
+		loadimage(&img[2], L"E:\\store\\source code\\MySnake\\image\\ice_wall.jpg");
+		loadimage(&img[3], L"E:\\store\\source code\\MySnake\\image\\ice_poison.jpg");
+		loadimage(&img[4], L"E:\\store\\source code\\MySnake\\image\\furnace.jpg");
+		loadimage(&img[5], L"E:\\store\\source code\\MySnake\\image\\stonebrick.jpg");
+	}
+	else if (scene == 4)
+	{   //地狱
+		loadimage(&img[0], L"E:\\store\\source code\\MySnake\\image\\nether_floor.jpg");
+		loadimage(&img[1], L"E:\\store\\source code\\MySnake\\image\\nether_food.jpg");
+		loadimage(&img[2], L"E:\\store\\source code\\MySnake\\image\\nether_wall.jpg");
+		loadimage(&img[3], L"E:\\store\\source code\\MySnake\\image\\nether_poison.jpg");
+		loadimage(&img[4], L"E:\\store\\source code\\MySnake\\image\\furnace.jpg");
+		loadimage(&img[5], L"E:\\store\\source code\\MySnake\\image\\stonebrick.jpg");
+	}
 	//似乎存在BUG
-	gotoxy(5, 45);
-	printf("当前得分： %d", score);
-	gotoxy(7, 45);
-	printf("最大食物数： %d", foodNum);
+	//gotoxy(5, 45);
+	//printf("当前得分： %d", score);
+	//gotoxy(7, 45);
+//	printf("最大食物数： %d", foodNum);
 	int count = 0;
 	//遍历链表打印蛇身体
 	snake * cur = head;
 	if (head == NULL)
 	{
-		printf("头指针为空");
+		//printf("头指针为空");
 	}
 	else
 	{
@@ -214,45 +392,43 @@ void printMap()
 			{
 				switch (map[i][j]) {
 				case 0:
-					gotoxy(i, 2 * j);
-					printf("  ");
+					//setfillcolor(BLACK);//数组的值对应空气的时候打印与底色相同或者不打印？
+					//solidrectangle(j * 30, i * 30, (j + 1) * 30, (i + 1) * 30);
+					putimage(j * 30, i * 30, &img[0]);
 					break;
 				case 1:
-					gotoxy(i, 2 * j);
-					printf("■");
+					putimage(j * 30, i * 30, &img[2]);
 					break;
 				case 2:
-					gotoxy(i, 2 * j);
-					printf("□");
+					putimage(j * 30, i * 30, &img[5]);
 					break;
-				case 4:
+				/*case 4:
 					gotoxy(i, 2 * j);
 					printf("  ");
+					break;*/
+				case 5://食物
+					putimage(j * 30, i * 30, &img[1]);
 					break;
-				case 5:
-					gotoxy(i, 2 * j);
-					printf("$$");
+				case 6://头
+					putimage(j * 30, i * 30, &img[4]);
 					break;
-				case 6:
-					gotoxy(i, 2 * j);
-					printf("■");
+				case 7://毒草
+					putimage(j * 30, i * 30, &img[3]);
 					break;
-				case 7:
-					gotoxy(i, 2 * j);
-					printf("XX");
-					break;
-				case 12:
+				/*case 12:
 					gotoxy(i, 2 * j);
 					printf("??");
-					break;
+					break;*/
 				}
 			}
 		}
 
-		gotoxy(9, 45);
-		printf("场上食物数： %d", foodCount);
-		gotoxy(2, 45);
-		printf("长度： %d", count);
+		//gotoxy(9, 45);
+		//printf("场上食物数： %d", foodCount);
+		gotoxy(2, 46);
+	//	printf("                 ");
+		gotoxy(2, 46);
+		//printf("长度：%d", count);
 	}
 }
 
@@ -315,11 +491,14 @@ void delTail()
 void move(int dirX,int dirY)
 {
 	int result = 0;
-	theWall(dirX, dirY);
+	AX = dirX;
+	AY = dirY;
+
+	if(walkMode == 1 ||walkMode == 3)
+	theWall(dirX, dirY);                  
+
 	addSnake(AX, AY);
-	if (walkMode == 1)
-	
-	
+	//if (walkMode == 1)	
 	result = judge();
 	if (result != 1)//不吃到食物时，每次移动都删掉尾节点
 	{
@@ -334,7 +513,7 @@ void move(int dirX,int dirY)
 	Clearer();//清除过期的食物/清除过期的毒草
 	if (dimageShow == 0) {
 		gotoxy(21, 8);
-		printf("                                          ");
+		//printf("                                          ");
 	}
 	else
 	{
@@ -348,11 +527,10 @@ void playGame()
 {
 
 	 kbhitCount = 0;//统计按键次数
-	foodNum = rand_food_y() % 10 + 6;//最大食物数量
+	foodNum = rand_food_y() % 10 + 15;//最大食物数量
 	poisonNum = (rand_food_y() * 213) % 10 + 4;//最大毒数量
 	foodGroup = (food*)calloc(sizeof(food), foodNum);
 	poisonGroup = (poison*)calloc(sizeof(poison), poisonNum);
-
 	gameStatus = 1;
 	//这两个数组用来保存一系列指令的方向
 	int directionX[20] = { 0 }, directionY[20] = { 0 };
@@ -367,13 +545,7 @@ void playGame()
 		key[i] = 0;
 		autoKey[i] = 0;
 	}
-	//test
-	/*
-	autoKey[0] =  KEYRIGHT ;
-	autoKey[1] =  KEYUP;
-	autoKey[2] = KEYLEFT;
-	autoKey[3] = KEYUP;
-	*/
+
 	
 	int step = 0;//走的步数
 	char lastKey;
@@ -383,14 +555,13 @@ void playGame()
 		generatePoison();
 		generateFood();//生成食物及去除过期食物  !!吃到智慧草 食物寿命无限
 
-
 		if (!kbhit())
 		{
 
-			if (walkMode == 1)
+			if (walkMode == 1 || walkMode == 3)
 			{
 				gotoxy(1, 42);
-				printf("AUTO MODE");
+				//printf("AUTO MODE");
 				if (autoRound != 0)
 				{
 					isFinish = 0;//不执行BFS
@@ -399,7 +570,7 @@ void playGame()
 				else
 					isFinish = 1;
 
-				if (isFinish) {
+				if ( isFinish) {
 					BFS();				//BFS(); 计算   现在只能找一次。。。然后把自己撞死了
 					loadKey();//加载-key 将autoKEY 转为 key
 					kbhitCount = 0;
@@ -511,7 +682,7 @@ void playGame()
 			key[step] = 0;
 		}
 
-		if (key[step + 1] == 0)//读取下一步发现没有按键时   //撞墙判断---------------
+		if (walkMode == 1 &&key[step + 1] == 0)//读取下一步发现没有按键时   //撞墙判断---------------/////////////待修改
 		{	
 			clearKey();
 			BFS();
@@ -519,6 +690,13 @@ void playGame()
 			//保留当前方向
 			//directionX[0] = directionX[step];
 			//directionY[0] = directionY[step];
+			step = 0;//又返回第一步，第一步即等会输入的值
+			kbhitCount = 0;//指令数变为1条
+		}
+		else if (key[step + 1] == 0)
+		{
+			directionX[0] = directionX[step];
+			directionY[0] = directionY[step];
 			step = 0;//又返回第一步，第一步即等会输入的值
 			kbhitCount = 0;//指令数变为1条
 		}
@@ -531,10 +709,15 @@ void playGame()
 		Sleep(100);
 	}
 		else//当检测到键盘输入时   如果本次输入与上次输入相同，不接受
-		{       if(walkMode == 1)
-			    clearKey();
+		{
+			if (walkMode == 3 )
+			{
+				step = 0;
+				clearKey();
 				walkMode = 0;
+			}
 				getch();//取得 方向键值 第一部分
+
 				key[kbhitCount] = getch();
 				//下面用于保存输入的值
 				int compare;//比较的对象 的下标
@@ -645,7 +828,7 @@ void playGame()
 	}
 	system("cls");
 	gotoxy(10, 10);
-	printf("GAME OVER");
+	//printf("GAME OVER");
 }
 
 
@@ -668,14 +851,15 @@ void generateFood()
 //	gotoxy(24, 0);
 //	printf("FOOD NUM:%d", foodNum);
 	int x, y;
-	x = (rand() * 465) % MAPX + 1;
-	y = (rand() * 124) % MAPY + 1;
+	x = ((rand() * 133) % (MAPX - 3)) + 2;
+	y = ((rand() * 334) % (MAPY - 3)) + 2;
+	//printf("%d,%d", x, y);
 	int isGenerate = 0;
 	//调节生成食物的速率
 	isGenerate = (rand() * 100) % 10;
-	if (isGenerate < 4)
+	if (isGenerate < 8)
 	{
-		if (x > 0 && x < MAPX && y>0 && y < MAPY && map[x][y] != 1 && foodCount < (foodNum) && map[x][y] != 2 && map[x][y] != 5 && map[x][y] != 6 && map[x][y] != 7)
+		if (x > 1 && x < MAPX - 2  && y>1 && y < MAPY - 2 && map[x][y] != 1 && foodCount < (foodNum) && map[x][y] != 2 && map[x][y] != 5 && map[x][y] != 6 && map[x][y] != 7)
 		{	
 			for (int i = 0; i < foodNum; i++) {//找一个位置储存食物
 				if (foodGroup[i].status == 0)//该位置本来不存在食物的时候
@@ -724,7 +908,7 @@ void generatePoison()
 			poisonCount += 1;
 
 			gotoxy(7, 45);
-			printf("场上毒数： %d", poisonCount);
+		//	printf("场上毒数： %d", poisonCount);
 		}
 	}
 }
@@ -749,13 +933,7 @@ int rand_food_y(void)
 
 
 int judge()
-{	//？？
-	/*if (head->positionX == tail->positionX && head->positionY == tail->positionY) {
-		gameStatus = 0;
-		gotoxy(21, 0);
-		printf("你只剩一节了！！！！！！");
-	}*/
-
+{	
 	int result = 0;
 	int x = head->positionX;
 	int y = head->positionY;
@@ -767,7 +945,6 @@ int judge()
 			if (foodGroup[i].foodX == x && foodGroup[i].foodY == y)
 			{
 				gotoxy(21, 0);
-				printf("Good You eat a food !");
 				foodGroup[i].status = 0;
 				foodCount -= 1;//有问题，不能这样。。这样写吃到中间一段 导致最后一个遍历不到了
 				score += 100;
@@ -777,13 +954,16 @@ int judge()
 			}
 	}
 
-	if (map[x][y] == 7)//头的坐标和毒物的坐标重合
+	if (map[x][y] == 7 && walkMode == 0)//头的坐标和毒物的坐标重合
 	{
+		walkMode = 3;
 		for (int i = 0; i < poisonNum; i++)
 			if (poisonGroup[i].poisonX == x && poisonGroup[i].poisonY == y)
 			{	//找到吃到的坐标
 				gotoxy(21, 0);
-				printf("No no no!!      ");
+			
+				
+				//printf("No no no!!      ");
 				poisonGroup[i].status = 0;
 				poisonCount -= 1;
 				score -= 100;
@@ -794,49 +974,33 @@ int judge()
 	}
 	//撞墙了！
 	else if (map[x][y] == 1) {
-		if(walkMode == 0)
+		//if(walkMode == 0)
 		gameStatus = 0;
-		else
-		{
-			delTail();
-			gotoxy(25, 0);
-			printf("撞墙了，痛！！！");
-		}
+
 	}
 
 	//咬到自己
-	else if (map[x][y] == 2)//蛇头坐标和身体坐标重合
+
+
+	else if (map[x][y] == 2 && walkMode == 0)//蛇头坐标和身体坐标重合
 	{
-		//先找到咬到的地方
-		snake * find;
-		find = head->next;
-		int loseNum = 0;//被咬掉的节数
-		while (find != NULL)//遍历链表
-		{
-			if (find->positionX == x && find->positionY == y)
-			{
-				gotoxy(21, 8);
-				printf("！！痛！！你失去了%d节", loseNum+1);
-				dimageShow = 5;
-				//删除之后的节点
-				snake * del;
 				int count = 0;
-				//从尾节点开始删除
-				do
-				{	
-					count++;
-					map[tail->positionX][tail->positionY] = 0;
-					tail = tail->previous;
-					free(tail->next);
-					tail->next = NULL;
-				} while (tail->positionX == find->positionX && tail->positionY == find->positionY);
-				//再清除掉一段
-				//gotoxy(22, 0);
-				//printf("痛！！！！！你失去了%d",count+1);
-				break;
-			}
-			find = find->next;
-		}
+				snake * find = tail;
+				while (find != NULL)
+				{
+					count += 1;
+					if (find->positionX == x && find->positionY == y)
+						break;
+					find = find->previous;
+				}
+				for (int i = 0; i < count; i++)
+				{
+					delTail();
+				}
+				gotoxy(21, 8);
+			//	printf("！！痛！！你失去了%d节", count);
+				dimageShow = 5;
+				
 	}
 			
 	
@@ -918,6 +1082,17 @@ void printKey()
 
 void visit(int row, int col)//下一步尝试的位置
 {
+	for (int i = 0; i < MAPX; i++)
+	{
+		maze[i][0] = 1;
+		maze[i][MAPY - 1] = 1;
+	}
+
+	for (int i = 0; i < MAPY; i++)
+	{
+		maze[0][i] = 1;
+		maze[MAPX - 1][i] = 1;
+	}
 	struct point visit_point = { row, col, front - 1 };
 	if (maze[row][col] == 5)
 		maze[row][col] = 5;
@@ -939,8 +1114,6 @@ void BFS()
 	//加载地图 用于搜索路径
 	for (int i = 0; i < MAPX; i++)
 	{
-		
-
 		for (int j = 0; j < MAPY; j++)
 		{
 
@@ -958,11 +1131,16 @@ void BFS()
 			maze[tarX][tarY] = 5;//打上记号--终点
 		}
 	}
-	int x, y;
+	if (foodCount == 0)
+	{
+		clearKey();
+		maze[tail->positionX][tail->positionY] = 5;
+	}
+		int x, y;
 	clean_queue();
 	struct point p;//起始点  蛇头---------------------------------怎么在第二期
 	gotoxy(10, 42);
-	printf("SNAKE HEAD POI:%d,%d", head->positionX, head->positionY);
+	//printf("SNAKE HEAD POI:%d,%d", head->positionX, head->positionY);
 	p.col = head->positionY;
 	p.row = head->positionX;
 	x = head->positionX;
@@ -979,18 +1157,18 @@ void BFS()
 		}
 
 		if (p.col + 1 < MAPY - 1 /* right 向右不撞边界*/
-			&& (maze[p.row][p.col + 1] == 0 || maze[p.row][p.col + 1] == 5) && maze[p.row][p.col + 1] != 1 && maze[p.row][p.col + 1] != 7 && maze[p.row][p.col + 1] != 6)//地图首先要可以走
+			&& (maze[p.row][p.col + 1] == 0 || maze[p.row][p.col + 1] == 5 || maze[p.row][p.col + 1] == 6) && maze[p.row][p.col + 1] != 1  && maze[p.row][p.col + 1] != 10)//地图首先要可以走
 			visit(p.row, p.col + 1);//visit这一区域
 
 		if (p.row + 1 < MAPX - 1 /* down */
-			&& (maze[p.row + 1][p.col] == 0 || maze[p.row][p.col + 1] == 5) && maze[p.row + 1][p.col] != 1 && maze[p.row + 1][p.col] != 7 && maze[p.row + 1][p.col] != 6)
+			&& (maze[p.row + 1][p.col] == 0 || maze[p.row + 1][p.col] == 5 || maze[p.row + 1][p.col] == 6) && maze[p.row + 1][p.col] != 1  && maze[p.row + 1][p.col] != 10)
 			visit(p.row + 1, p.col);
 
-		if (p.col - 1 >= 0 /* left */
-			&& (maze[p.row][p.col - 1] == 0 || maze[p.row][p.col + 1] == 5) && maze[p.row][p.col - 1] != 1 && maze[p.row][p.col - 1] != 7 && maze[p.row][p.col - 1] != 6)
+		if (p.col - 1 > 0 /* left */
+			&& (maze[p.row][p.col - 1] == 0 || maze[p.row][p.col - 1] == 5 || maze[p.row][p.col - 1] == 6) && maze[p.row][p.col - 1] != 1  && maze[p.row][p.col - 1] != 10)
 			visit(p.row, p.col - 1);
-		if (p.row - 1 >= 0 /* up */
-			&& (maze[p.row - 1][p.col] == 0 || maze[p.row][p.col + 1] == 5) && maze[p.row - 1][p.col] != 1 && maze[p.row - 1][p.col] != 7 && maze[p.row - 1][p.col] != 1 && maze[p.row - 1][p.col] != 6)
+		if (p.row - 1 > 0 /* up */
+			&& (maze[p.row - 1][p.col] == 0 || maze[p.row - 1][p.col] == 5|| maze[p.row - 1][p.col] == 6) && maze[p.row - 1][p.col] != 1   && maze[p.row - 1][p.col] != 10)
 			visit(p.row - 1, p.col);
 	}
 	
@@ -1001,7 +1179,6 @@ void BFS()
 
 			int keyCount = 49;
 			while (p.predecessor != -1) {//从最后一步一直打到第一步
-			//	map[p.row][p.col] = 12;
 				if (p.row != queue[p.predecessor].row)//如果行数发生了改变
 				{
 					if (p.row == (queue[p.predecessor].row - 1))//本行在上一行的上面
@@ -1065,81 +1242,233 @@ void clearKey() {  //清空所有按键
 
 void theWall(int dirX,int dirY)
 {
-	
+	if (foodCount == 0)
+	{
+		autoRound = 0;
+		clearKey();
+	}
+	//WALKMODE3    手动躲模式
+	int flag = 0;
 	AX = dirX;
 	AY = dirY;
-	if (map[head->positionX + AX][head->positionY + AY] == 1|| map[head->positionX + AX][head->positionY + AY] == 6) {
-		clearKey();
-		if (AX == 1 || AX == -1)
+	if (map[head->positionX + AX][head->positionY + AY] == 1) {//看看下一步的位置	
+		if (walkMode == 3)
 		{
-			AX = 0;
-			AY = 1;
-			if (map[head->positionX + AX][head->positionY + AY] == 1 || map[head->positionX + AX][head->positionY + AY] == 2)
+			//autoRound = 0;
+		//	isFinish = 1;//
+			clearKey();
+			char danger,get;
+		    getch();
+			danger = getch();//下一步就要撞墙手动躲避
+
+			switch (danger)
 			{
+			case KEYUP:
+				AX = -1;
+				AY = 0;
+				break;
+			case KEYDOWN:
+				AX = 1;
+				AY = 0;
+				break;
+			case KEYLEFT:
 				AX = 0;
 				AY = -1;
+				break;
+			case KEYRIGHT:
+				AX = 0;
+				AY = 1;
+				break;
+			default:
+				break;
 			}
+
 		}
-		if (AY == 1 || AY == -1) {
-			AY = 0;
-			AX = 1;
-			if (map[head->positionX + AX][head->positionY + AY] == 1 || map[head->positionX + AX][head->positionY + AY] == 2)
-			{
-				AY = 0;
+		else if (walkMode == 1) {
+			clearKey();
+			//getch();
+			//autoRound = 0;
+			/**
+			if (AX == 1)
 				AX = -1;
+			else if(AX == -1)
+				AX = 1;
+		else if (AY == 1)
+			AY = -1;
+		else if (AY == -1)
+			AY = 1;
+			*/
+			
+			if ((AX == 1 || AX == -1) && flag == 0)//当前方向向下或者向上
+			{
+				//autoRound = 0;
+				flag = 1;
+				//clearKey();
+				AX = 0;
+				AY = 1;
+				if (map[head->positionX + AX][head->positionY + AY] == 1)
+					AY = -1;
 			}
+			if ((AY == 1 || AY == -1) && flag == 0) {
+				autoRound = 0;
+				flag = 1;
+				//clearKey();
+				AY = 0;
+				AX = 1;
+				if (map[head->positionX + AX][head->positionY + AY] == 1)
+					AX = -1;
+			}
+
 		}
-		clearKey();
-		BFS();
-		loadKey();
 	}
 	
 
-	/*if(map[x + 1][y] == 1||map[x - 1][y] == 1||map[x][y + 1]== 1||map[x][y - 1] == 1)
+}
+
+void beforeGame()//游戏开始时的选择界面
+{
+	IMAGE select[10];
+	loadimage(&select[0], L"E:\\store\\source code\\MySnake\\image\\start.jpg");
+	loadimage(&select[1], L"E:\\store\\source code\\MySnake\\image\\load.jpg");
+	loadimage(&select[2], L"E:\\store\\source code\\MySnake\\image\\exit.jpg");
+	loadimage(&select[3], L"E:\\store\\source code\\MySnake\\image\\rank.jpg");
+	int choose = 0;
+	putimage(0, 0, &select[0]);
+	while (1)
 	{
-		clearKey();
-		BFS();
-		loadKey();
-	}*//*
+		if (kbhit)
+		{   
+			char get;
+			if ((get = getch()) == 13)//按下回车时开始游戏-等操作
+			{
+				IMAGE lev;
+				loadimage(&lev, L"E:\\store\\source code\\MySnake\\image\\level1.jpg");
+				initgraph(1000, 620);
+				putimage(0, 0, &lev);
+				if (choose == 0)
+					break;
+				if (choose == 2)
+					exit(0);
+			}
+			else
+			{
+				switch (get)
+				{
+				case KEYRIGHT:
+					choose += 1;
+					break;
+				case KEYLEFT:
+					choose -= 1;
+					break;
+				default:
+					break;
+				}
+				if (choose == 4)
+					choose = 0;
 
-	for (int i = 0; i < 5; i++)
+				if (choose == -1)
+					choose = 2;
+				putimage(0, 0, &select[choose]);
+			}
+		}
+	}
+
+}
+
+void setting()
+{
+	initgraph(1000, 620);
+	IMAGE sceneSel[5];
+	IMAGE level[3];
+	difficulty = 0;
+	loadimage(&level[0], L"E:\\store\\source code\\MySnake\\image\\easy.jpg");
+	loadimage(&level[1], L"E:\\store\\source code\\MySnake\\image\\medium.jpg");
+	loadimage(&level[2], L"E:\\store\\source code\\MySnake\\image\\difficult.jpg");
+
+	loadimage(&sceneSel[0], L"E:\\store\\source code\\MySnake\\image\\sceneselect0.jpg");
+	loadimage(&sceneSel[1], L"E:\\store\\source code\\MySnake\\image\\sceneselect1.jpg");
+	loadimage(&sceneSel[2], L"E:\\store\\source code\\MySnake\\image\\sceneselect2.jpg");
+	loadimage(&sceneSel[3], L"E:\\store\\source code\\MySnake\\image\\sceneselect3.jpg");
+	loadimage(&sceneSel[4], L"E:\\store\\source code\\MySnake\\image\\sceneselect4.jpg");
+	//进行地图选择  产生不同的地形
+	//温和草原
+	//富饶森林
+	//干旱沙漠
+	//荒芜冰原
+	//极端地狱
+	//自定义
+
+	//进行场景选择
+	putimage(0, 0, &sceneSel[0]);
+	while (1)
 	{
-		int addx = 0;
-		int addy = 0;
-		switch (key[i])
+
+		if (kbhit)
 		{
-		case KEYUP:
-			addx = -1;
-			addy = 0;
-			break;
-		case KEYDOWN:
-			addx = 1;
-			addy = 0;
-			break;
-		case KEYLEFT:
-			addx = 0;
-			addy = -1;
-			break;
-		case KEYRIGHT:
-			addx = 0;
-			addy = 1;
-		case 0:
-			i = 5;
-			break;
+			char get;
+			if ((get = getch()) == 13)//按下回车时确认场景
+				break;
+			else
+			{
+				switch (get)
+				{
+				case KEYDOWN:
+					scene += 1;
+					break;
+				case KEYUP:
+					scene -= 1;
+					break;
+				default:
+					break;
+				}
+				if (scene == 5)
+					scene = 0;
+
+				if (scene == -1)
+					scene = 4;
+				putimage(0, 0, &sceneSel[scene]);
+			}
 		}
+	}
+
+
+	//加载地图
+	for (int i = 0; i < MAPX; i++)
+		for (int j = 0; j < MAPY; j++)
+			map[i][j] = mapSel[scene][i][j];
+
+
+	//进行难度选择
+	putimage(0, 0, &level[0]);
+	while (1)
+	{
 		
-		if (map[x][y] == 1 )
+		if (kbhit)
 		{
+			char get;
+			if ((get = getch()) == 13)//按下回车时确认难度
+				break;
+			else
+			{
+				switch (get)
+				{
+				case KEYDOWN:
+					difficulty += 1;
+					break;
+				case KEYUP:
+					difficulty -= 1;
+					break;
+				default:
+					break;
+				}
+				if (difficulty == 3)
+					difficulty = 0;
 
-			clearKey();
-			BFS();
-			loadKey();
-			break;
-
+				if (difficulty == -1)
+					difficulty = 2;
+				putimage(0, 0, &level[difficulty]);
+			}
 		}
+	}
 
-		x += addx;
-		y += addy;
-		
-	}*/
 }
