@@ -37,8 +37,9 @@
 #define BOOM 20
 #define SHINING 21
 #define BEAUTY 22
+int ad1 = 0, ad2 = 0;
 int isUp = 1;//是否还进行进度打印---若通关开始无尽模式就不打印了
-int hungry = 0, hungrySpeed = 8, hungryRound = 8, hungryStatus = 0, hungryShow = 4, hungryTem = 0, *hungryIc;//饥饿系统,饥饿情况
+int hungry = 0, hungrySpeed = 4, hungryRound = 8, hungryStatus = 0, hungryShow = 4, hungryTem = 0, *hungryIc;//饥饿系统,饥饿情况
 jmp_buf buf, set, upg,ove,con;//用于页面的跳转
 int isSelectDifficulty = 1;
 int temp = 0;
@@ -186,12 +187,12 @@ int kbhitCount;
 int gameStatus = 1;											   //在游戏开始时确认同时存在的最多食物数量
 int totalScore = 0,curScore = 0;
 int dimageShow = 0; //收到伤害时显示时间
-int directionX[50] = { 0 }, directionY[50] = { 0 };
+int directionX[50] = { 0 }, directionY[50] = { 0 }, curDirectionX = 0,curDirectionY = 0;
 int result = 0, resultp = -1;
 
-int foodScore = 0,beginSpeed = 0,speedAdd = 0,maxHug = 5;//每吃一个食物的得分（难度越高，分越高）,目标得分（难度越高，目标越高）,开始时的刷新速度，吃到食物后减少的速度,最高饱食度，根据难度而定
-
-float eatNum = 0, len = 0, printLength = 0, ad = 0, process = 0, eatWhat = 0, complete = 0;//绘制进度条 time吃到食物的计数,complete过关
+int gameSpeed,foodScore = 0,beginSpeed = 0,speedAdd = 0,maxHug = 5;//每吃一个食物的得分（难度越高，分越高）,目标得分（难度越高，目标越高）,开始时的刷新速度，吃到食物后减少的速度,最高饱食度，根据难度而定
+int eatNum = 0;
+float  len = 0, printLength = 0, ad = 0, process = 0, eatWhat = 0, complete = 0;//绘制进度条 time吃到食物的计数,complete过关
 int targetScore;
 /*
 *********
@@ -678,9 +679,11 @@ void playGame()
 	while (gameStatus)
 	{
 		
-		printWord(); 
-		if (cleverCount == 0)
+		printWord();
+		if (eatNum == 2) {
 			generateCleverwater();
+			eatNum = 0;
+		}
 		generatePoison();
 		generateFood();//生成食物及去除过期食物  !!吃到智慧草 食物寿命无限
 		generateTnt();
@@ -804,6 +807,8 @@ void playGame()
 
 	
 			}
+			curDirectionX = directionX[step];
+			curDirectionY = directionY[step];
 			//当 key 的数组中还存在 按键时 读取按键
 			move(directionX[step], directionY[step]);
 
@@ -835,7 +840,7 @@ void playGame()
 			}//下一轮还是读取储存好的指令
 			if (gameStatus != 0 )
 				printMap();
-			Sleep(200);
+			Sleep(gameSpeed);
 		}
 		else//当检测到键盘输入时   如果本次输入与上次输入相同，不接受
 		{
@@ -888,6 +893,7 @@ void playGame()
 					step = 0;
 					kbhitCount = 0;
 					walkMode = 0;
+					gameSpeed = beginSpeed;
 				}   //自动寻路模式按键直接退出。。存在bug
 				
 				key[kbhitCount] = getch();
@@ -1131,23 +1137,28 @@ void HideCursor()
 
 void generateFood()
 {
-	srand(time(NULL));
-	int x, y;
-	x = ((rand() * 133) % (MAPX - 3)) + 2;
-	y = ((rand() * 334) % (MAPY - 3)) + 2;
+	ad1+=2;
 	int isGenerate = 0;
+	srand((unsigned)time(NULL) + ad1);
+	ad1 *= ad1;
+	int x, y;
+	x = rand() % (MAPX - 3) + 2;
+	srand(time(NULL) - ad2);
+	y = rand() % (MAPY - 3) + 2;
+	
 	//调节生成食物的速率
-	isGenerate = (rand() * 100) % 10;
-	if (isGenerate < 8)
+	isGenerate = rand() % 10;
+	printf("  ISGENERATE:%d  ", isGenerate);
+	if (isGenerate < 7)
 	{
-		if (x > 1 && x < MAPX - 2 && y>1 && y < MAPY - 2 && map[x][y] != 1 && foodCount < (foodNum) && map[x][y] != 2 && map[x][y] != 5 && map[x][y] != 6 && map[x][y] != 7 && map[x][y] != 19)
+		if (x > 1 && x < MAPX - 2 && y>1 && y < MAPY - 2 && map[x][y] != 1 && foodCount < (foodNum) && map[x][y] != 2 && map[x][y] != 5 && map[x][y] != 6 && map[x][y] != 7 && map[x][y] != 19 && map[x][y] != CLEVER)
 		{
 			for (int i = 0; i < foodNum; i++) {//找一个位置储存食物
 				if (foodGroup[i].status == 0)//该位置本来不存在食物的时候
 				{
 					foodGroup[i].foodX = x;
 					foodGroup[i].foodY = y;
-					foodGroup[i].foodLife = (rand_food_x() * 100) % 50 + 50;//食物的寿命
+					foodGroup[i].foodLife = (rand_food_x() * 100) % 50 + 40;//食物的寿命
 					foodGroup[i].status = 1;
 					map[x][y] = 5;
 					i = foodNum;
@@ -1164,19 +1175,22 @@ void generateFood()
 
 void generatePoison()
 {
-	srand(time(NULL) + 100);
+	ad1 += ad1;
+	srand((unsigned)time(NULL) + ad1);
 	int x, y;
-	x = (rand() * 287) % MAPX + 1;
-	y = (rand() * 99) % MAPY + 1;
+	x = rand() % MAPX + 1;
+	ad1++;
+	srand((unsigned)time(NULL) - ad1);
+	y = rand() % MAPY + 1;
 	int isGenerate = 0;
 	//调节生成的速率
-	isGenerate = (rand() * 100) % 18;
-	if (isGenerate < 12)
+	isGenerate = rand() % 18;
+	if (isGenerate < 6)
 	{
-		if (x > 0 && x < MAPX && y>0 && y < MAPY && map[x][y] != 1 && poisonCount < (poisonNum - 1) && map[x][y] != 2 && map[x][y] != 19 && map[x][y] != 7 && map[x][y] != 5)
+		if (x > 0 && x < MAPX && y>0 && y < MAPY && map[x][y] != 1 && poisonCount < (poisonNum - 1) && map[x][y] != 2 && map[x][y] != 19 && map[x][y] != 7 && map[x][y] != 5 && map[x][y] != CLEVER)
 		{
-			for (int i = 0; i < poisonNum; i++) {//找一个位置储存食物
-				if (poisonGroup[i].status == 0)//该位置本来不存在食物的时候
+			for (int i = 0; i < poisonNum; i++) {//找一个位置储存
+				if (poisonGroup[i].status == 0)//
 				{
 					poisonGroup[i].shinning = 8;//用于控制闪烁
 					poisonGroup[i].poisonX = x;
@@ -1196,14 +1210,20 @@ void generatePoison()
 
 void generateTnt()
 {
-	srand(time(NULL) + 200);
+	if (ad2 > 10000);
+	ad2 = 0;
+
+	ad2++;
+	ad2 *= 2;
+	srand((unsigned)time(NULL) - ad2);
 	int x, y;
-	x = (rand() * 123) % MAPX + 1;
-	y = (rand() * 321) % MAPY + 1;
+	x = rand() % MAPX + 1;
+	srand((unsigned)time(NULL) + tail->positionY);
+	y = rand() * 3 % MAPY + 1;
 	int isGenerate = 0;
 	//调节生成的速率
-	isGenerate = (rand() * 100) % 20;
-	if (isGenerate < 5)
+	isGenerate = rand()  % 20;
+	if (isGenerate < 8)
 	{
 		if (x > 0 && x < MAPX && y>0 && y < MAPY && map[x][y] != 1 && poisonCount < (poisonNum - 1) && map[x][y] != 2 && map[x][y] != 5 && map[x][y] != 7)
 		{
@@ -1233,7 +1253,8 @@ void generateCleverwater()
 	y = rand() * 321 % MAPY + 1;
 	if (map[x][y] == AIR)
 		map[x][y] = CLEVER;
-
+	//printf("%d,%d", x, y);
+	//exit(1);
 }
 
 //生成食物的随机数//
@@ -1264,6 +1285,9 @@ int judge()
 	if (map[x][y] == CLEVER)
 	{
 		if (autoRound == 5 || autoRound < 0) {
+
+			//获得加速效果
+			gameSpeed = 3;
 			autoRound = 4;//吃到智慧药水后自动寻路吃四个食物
 			PlaySound(TEXT("./music/clever.wav"), NULL, SND_FILENAME | SND_ASYNC);
 			cleverCount = 0;
@@ -1276,7 +1300,7 @@ int judge()
 	{	
 		if(autoRound != 5)
 		autoRound--;
-
+		eatNum++;
 		hungryRound = hungrySpeed;
 		hungry = maxHug;//吃到食物饱食度满
 		for (int i = 0; i < maxHug ; i++)
@@ -1301,7 +1325,7 @@ int judge()
 
 	if (map[x][y] == 7 && walkMode == 0)//头的坐标和毒物的坐标重合
 	{
-
+		eatNum--;
 		eatWhat = POISON;
 		cleverCount = 0;
 		result = POISON;
@@ -1317,6 +1341,7 @@ int judge()
 	}
 	if (map[x][y] == 19)
 	{
+		eatNum /= 2;
 		eatWhat = TNT;
 		result = TNT;
 		int hx, hy;
@@ -1439,8 +1464,8 @@ void Clearer()
 			if (tntGroup[i].tntLife == 2)
 			{
 				mciSendString(_T("close boom"), NULL, 0, NULL);//关闭音乐
-				mciSendString(_T("open ./music/sisisi.mp3 alias tnt"), NULL, 0, NULL);
-				mciSendString(_T("play tnt"), NULL, 0, NULL);//重复播放
+				//mciSendString(_T("open ./music/sisisi.mp3 alias tnt"), NULL, 0, NULL);
+				//mciSendString(_T("play tnt"), NULL, 0, NULL);//重复播放
 				int x = tntGroup[i].poisonX;
 				int y = tntGroup[i].poisonY;
 				beauty[x][y] = 9;// burning tnt
@@ -1450,7 +1475,7 @@ void Clearer()
 			if (tntGroup[i].tntLife == 0 && tntGroup[i].status == 1)
 			{
 
-				mciSendString(_T("close tnt"), NULL, 0, NULL);//关闭音乐
+				//mciSendString(_T("close tnt"), NULL, 0, NULL);//关闭音乐
 				int x = tntGroup[i].poisonX;
 				int y = tntGroup[i].poisonY;
 				if (map[x - 1][y] == SNAKEBODY || map[x + 1][y] == SNAKEBODY || map[x][y - 1] == SNAKEBODY || map[x][y + 1] == SNAKEBODY)
@@ -1461,10 +1486,11 @@ void Clearer()
 					delTail();
 					delTail();
 				}
-				mciSendString(_T("close tnt"), NULL, 0, NULL);//关闭音乐
-				mciSendString(_T("open ./music/tnt.mp3 alias boom"), NULL, 0, NULL);//打开文件
+				//mciSendString(_T("close tnt"), NULL, 0, NULL);//关闭音乐
+				mciSendString(_T("open ./music/1tnt.mp3 alias boom"), NULL, 0, NULL);//打开文件
 				mciSendString(_T("play boom"), NULL, 0, NULL);
 			//	h1 = ::CreateThread(NULL, 0, myfun1, NULL, 0, NULL);   //创建线程 
+				beauty[x][y] = BOOM;
 				beauty[x + 1][y] = BOOM;
 				beauty[x - 1][y] = BOOM;
 				beauty[x][y + 1] = BOOM;
@@ -1654,8 +1680,13 @@ void theWall(int dirX, int dirY)
 	if (map[head->positionX + AX][head->positionY + AY] == 1) {//看看下一步的位置	
 		if (walkMode == 3)
 		{
+			setbkmode(TRANSPARENT);
+			settextcolor(BLACK);
+			settextstyle(25, 0, _T("华文行楷"));
+			TCHAR s[] = _T("下一步就要撞墙了，请你来决定方向");
+			outtextxy(665, 350, s);
 			//autoNum = 0;
-			//	isFinish = 1;//
+			//isFinish = 1;//
 			clearKey();
 			char danger, get;
 			getch();
@@ -1928,7 +1959,7 @@ void loadSetting()
 	switch (difficulty)
 	{
 	case 0:
-		beginSpeed = 450;
+		beginSpeed = 200;
 		foodScore = 100;//每吃一个食物 +100分
 		maxHug = 7;
 		k = 1;
@@ -1977,7 +2008,7 @@ void loadSetting()
 	switch (scene)//不同关卡目标分数不同
 	{
 	case 0:
-		targetScore = 800 * k;
+		targetScore = 600* k;
 		break;
 	case 1:
 		targetScore = 1200 * k;
@@ -1989,7 +2020,7 @@ void loadSetting()
 		targetScore = 1800 * k;
 		break;
 	case 4:
-		targetScore = 2000 * k;
+		targetScore = 1800 * k;
 		break;
 	default:
 		break;
@@ -1998,14 +2029,14 @@ void loadSetting()
 	hungryIc = (int *)calloc(sizeof(int), maxHug);
 
 	//根据难度各个物品的数量不一样
-	foodNum = rand_food_y() % 10 + 14 - 4 * k;//最大食物数量
+	foodNum = rand_food_y() % 12 + 6 - 1 * k;//最大食物数量
 	poisonNum = (rand_food_y() * 213) % 10 + 5 * k;//最大毒数量
 	tntNum = (rand_food_x() * 101) % 10 + 4 * k;
 	
 	tntGroup = (tnt*)calloc(sizeof(tnt), tntNum);
 	foodGroup = (food*)calloc(sizeof(food), foodNum);
 	poisonGroup = (poison*)calloc(sizeof(poison), poisonNum);
-
+	gameSpeed = beginSpeed;
 	
 }
 
@@ -2039,7 +2070,7 @@ void generateRandBeauty()
 	//生成随机数量的 特殊地形
 	int beautyNum = 0, beautyCount = 0;
 	srand((unsigned)time(NULL));
-	beautyNum = rand() * 100 % 15 + 10;
+	beautyNum = rand() * 100 % 10 + 4;
 	int ad1 = 0, ad2 = 0;;
 	while (beautyCount <= beautyNum)
 	{
@@ -2077,7 +2108,7 @@ void printBeauty()
 	loadimage(&beautyI[10], L"./image/nether_poison_shining.jpg");
 	loadimage(&beautyI[11], L"./image/dirtBeauty1.jpg");
 	loadimage(&beautyI[12], L"./image/forestBeauty1.jpg");
-	loadimage(&beautyI[13], L"./image/iceBeauty1.jpg");
+	loadimage(&beautyI[13], L"./image/iceBeauty2.jpg");
 	loadimage(&beautyI[14], L"./image/sandBeauty1.jpg");
 	loadimage(&beautyI[15], L"./image/netherBeauty1.jpg");
 	for (int i = 0; i < MAPX; i++)
@@ -2178,11 +2209,16 @@ void printWord()
 	}
 	else if(autoRound >= -2 && autoRound <=0)
 	{
-		if (autoRound == 0)
+		gameSpeed = beginSpeed;
+		if (autoRound == 0)//有问题
 		{
+			clearKey();
+			directionX[0] = curDirectionX;
+			directionY[0] = curDirectionY;
 			walkMode = 0;
 		}
 		outtextxy(675, 450, e);
+	Sleep(1000);
 		autoRound--;
 	}
 	if (autoRound == -3)
@@ -2261,12 +2297,15 @@ void printWord()
 }
 void restart()
 {
-	result = 0;
+
+	gameSpeed = beginSpeed;
+	isSelectDifficulty = 1;
+	result = -1;
 	resultp = -1;
 	scene = 0;
 	hungryTem = 0;
-	result = 0;
-	resultp = 0;
+	
+	
 	for (int i = 0; i < maxHug; i++)
 		hungryIc[i] = 0;
 	hungry = maxHug;
@@ -2276,13 +2315,21 @@ void restart()
 	for (int i = 0; i < MAPX; i++)
 		for (int j = 0; j < MAPY; j++)
 		{
-			if (beauty[i][j] == BOOM)
+			if (beauty[i][j] == BOOM || beauty[i][j] == BEAUTY)
 				beauty[i][j] = AIR;
 		}
-	//加载地图
-	for (int i = 0; i < MAPX; i++)
-		for (int j = 0; j < MAPY; j++)
-			map[i][j] = mapSel[scene][i][j];
+	
+
+	/*
+	删除这一盘的蛇
+	
+	*/
+	snake * del = head->next;
+	while (del != NULL)
+	{
+		free(del->previous);
+		del = del->next;
+	}
 	clearKey();
 	foodCount = 0;
 	poisonCount = 0;
@@ -2737,18 +2784,21 @@ void loadGame()
 void upgradeProcess()
 {	
 	up = ::CreateThread(NULL, 0, drawProcess, NULL, 0, NULL);
-	if (curScore == targetScore) {//当前关卡内得分达到目标
+	
+	if (curScore >= targetScore) {//当前关卡内得分达到目标
+		
 		if (scene < 4) {
+			curScore = targetScore;
 			printWord();
 			setbkmode(TRANSPARENT);
 			settextcolor(BLACK);
 			settextstyle(35, 0, _T("华文行楷"));
 			TCHAR s[] = _T("恭喜你，达成目标");
-			outtextxy(665, 300, s);
+			outtextxy(665, 250, s);
 			mciSendString(_T("close music"), NULL, 0, NULL);//关闭音乐
 			mciSendString(_T("open ./music/compm.mp3 alias vic"), NULL, 0, NULL);//打开文件
 			mciSendString(_T("play vic"), NULL, 0, NULL);//重复播放
-			Sleep(10000);//主线程停一下，让进度条画完。。
+			Sleep(6000);//主线程停一下，让进度条画完。。
 		}
 		else if (scene == 4)//最后一关通关了。。
 		{
@@ -2791,7 +2841,7 @@ DWORD WINAPI drawProcess(LPVOID lpParameter)
 			setfillcolor(GREEN);
 			solidrectangle(startPoi, 603, process, 620);
 			startPoi = process;
-			Sleep(100);
+			Sleep(50);
 		} 
 		eatWhat = 0;
 	}
@@ -2818,9 +2868,26 @@ DWORD WINAPI drawProcess(LPVOID lpParameter)
 
 void upgrade()//升级后重新加载界面到新地图
 {
-	
-	if (curScore == targetScore)
+
+	if (curScore >= targetScore)
 	{
+		autoRound = -3;
+		foodCount = 0;
+		poisonCount = 0;
+		tntCount = 0;
+		for (int i = 0; i < foodNum; i++)
+		{
+			foodGroup[i].status = 0;
+		}
+		for (int i = 0; i < poisonNum; i++)
+		{
+			poisonGroup[i].status = 0;
+		}
+		for (int i = 0; i < tntNum; i++)
+		{
+			tntGroup[i].status = 0;
+		}
+
 		
 		clearKey();
 		directionX[0] = -1;
@@ -2889,7 +2956,6 @@ DWORD WINAPI hungryMsg(LPVOID lpParameter)
 		{
 			TCHAR s[] = _T("好饿呀！");
 			outtextxy(675, 320, s);
-			Sleep(2000);
 		}
 	}
 	else if(hungryStatus == 2)
